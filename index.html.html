@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CJM пациента — Клиника Фомина</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --green: #1D9E75;
+  --green-light: #E1F5EE;
+  --green-mid: #0F6E56;
+  --red: #E24B4A;
+  --red-light: #FCEBEB;
+  --amber: #EF9F27;
+  --amber-light: #FAEEDA;
+  --bg: #F7F6F2;
+  --card: #FFFFFF;
+  --text: #1a1a18;
+  --muted: #6b6a64;
+  --border: rgba(0,0,0,0.08);
+  --font-display: 'Unbounded', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.page { max-width: 960px; margin: 0 auto; padding: 48px 24px 80px; }
+
+/* Hero */
+.hero { margin-bottom: 52px; }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--green-light); color: var(--green-mid);
+  font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+  padding: 5px 12px; border-radius: 20px; margin-bottom: 20px;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 4vw, 32px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.hero h1 span { color: var(--green); }
+.hero p { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 560px; }
+
+.meta-row {
+  display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;
+}
+.meta-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--muted);
+}
+.meta-item i { font-size: 14px; color: var(--green); }
+
+/* Phase nav */
+.phase-nav {
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  gap: 8px; margin-bottom: 28px;
+}
+.phase-btn {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 14px 8px 12px;
+  cursor: pointer; transition: all .2s; text-align: center;
+  position: relative; overflow: hidden;
+}
+.phase-btn::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: var(--green); transform: scaleX(0);
+  transition: transform .2s; border-radius: 0 0 12px 12px;
+}
+.phase-btn:hover { border-color: var(--green); transform: translateY(-2px); }
+.phase-btn.active { border-color: var(--green); background: var(--green-light); }
+.phase-btn.active::after { transform: scaleX(1); }
+.phase-btn .picon { font-size: 20px; margin-bottom: 6px; color: var(--green); }
+.phase-btn .pname { font-size: 11px; font-weight: 500; color: var(--text); display: block; }
+.phase-btn .psub { font-size: 10px; color: var(--muted); display: block; margin-top: 2px; }
+.phase-btn .emotion {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-top: 8px;
+}
+
+/* Detail panel */
+.detail-panel { display: none; animation: fadeUp .25s ease; }
+.detail-panel.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 36px; }
+
+.detail-card {
+  background: var(--card); border-radius: 14px;
+  padding: 18px; border: 1px solid var(--border);
+  border-top: 3px solid transparent;
+}
+.detail-card.actions { border-top-color: #888; }
+.detail-card.pains { border-top-color: var(--red); }
+.detail-card.opps { border-top-color: var(--green); }
+
+.detail-card h3 {
+  font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+.detail-card ul { list-style: none; }
+.detail-card ul li {
+  font-size: 13px; color: var(--text); padding: 7px 0;
+  border-bottom: 1px solid var(--border); line-height: 1.45;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.detail-card ul li:last-child { border-bottom: none; }
+.detail-card ul li::before { content: '·'; color: var(--green); flex-shrink: 0; margin-top: 1px; }
+
+/* Emotion chart section */
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  margin: 36px 0 16px;
+}
+.section-header h2 {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 500;
+  letter-spacing: -.01em;
+}
+.section-header i { font-size: 18px; color: var(--green); }
+
+.chart-card {
+  background: var(--card); border-radius: 14px;
+  border: 1px solid var(--border); padding: 24px;
+  margin-bottom: 36px;
+}
+.chart-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 12px; padding: 0 4px;
+}
+.chart-labels span { font-size: 10px; color: var(--muted); text-align: center; flex: 1; }
+
+/* Problems */
+.problems-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 36px; }
+
+.prob-card {
+  background: var(--card); border-radius: 14px;
+  border: 1px solid var(--border); padding: 20px;
+  transition: transform .2s, box-shadow .2s;
+}
+.prob-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.06); }
+
+.severity {
+  font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 12px;
+}
+.sev-high { background: var(--red-light); color: #A32D2D; }
+.sev-med { background: var(--amber-light); color: #854F0B; }
+
+.prob-card h4 { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+.prob-card p { font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 14px; }
+
+.fix {
+  background: var(--green-light); border-radius: 8px;
+  padding: 10px 12px; font-size: 12px; color: var(--text); line-height: 1.5;
+}
+.fix strong { color: var(--green-mid); }
+
+/* Metrics */
+.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 36px; }
+.metric {
+  background: var(--card); border-radius: 12px;
+  border: 1px solid var(--border); padding: 16px 12px; text-align: center;
+}
+.metric .num { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text); }
+.metric .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.metric .delta { font-size: 11px; color: var(--green); font-weight: 500; margin-top: 4px; }
+
+/* Divider */
+.divider { height: 1px; background: var(--border); margin: 40px 0; }
+
+/* Footer */
+.footer {
+  text-align: center; font-size: 11px; color: var(--muted);
+  padding-top: 20px; border-top: 1px solid var(--border);
+  line-height: 1.6;
+}
+.footer a { color: var(--green); text-decoration: none; }
+
+/* Responsive */
+@media (max-width: 700px) {
+  .phase-nav { grid-template-columns: repeat(3, 1fr); }
+  .detail-grid { grid-template-columns: 1fr; }
+  .problems-grid { grid-template-columns: 1fr; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-tag"><i class="ti ti-route"></i> Продуктовый анализ</div>
+    <h1>CJM пациента<br><span>Клиника Фомина</span></h1>
+    <p>Карта пути пользователя от первого контакта до повторного визита — на основе анализа сайта, мобильного приложения и публичных отзывов.</p>
+    <div class="meta-row">
+      <div class="meta-item"><i class="ti ti-user"></i> Никита Свирин</div>
+      <div class="meta-item"><i class="ti ti-database"></i> RuStore · 2ГИС · ПроДокторов · fomin-clinic.ru</div>
+      <div class="meta-item"><i class="ti ti-calendar"></i> Май 2025</div>
+    </div>
+  </div>
+
+  <!-- Phase nav -->
+  <div class="phase-nav" id="phaseNav">
+    <button class="phase-btn active" onclick="showPhase(0)">
+      <div class="picon"><i class="ti ti-search"></i></div>
+      <span class="pname">Осознание</span>
+      <span class="psub">Поиск клиники</span>
+      <div class="emotion" style="background:#EF9F27"></div>
+    </button>
+    <button class="phase-btn" onclick="showPhase(1)">
+      <div class="picon"><i class="ti ti-calendar-plus"></i></div>
+      <span class="pname">Запись</span>
+      <span class="psub">Сайт / приложение</span>
+      <div class="emotion" style="background:#E24B4A"></div>
+    </button>
+    <button class="phase-btn" onclick="showPhase(2)">
+      <div class="picon"><i class="ti ti-clock"></i></div>
+      <span class="pname">До визита</span>
+      <span class="psub">Подготовка</span>
+      <div class="emotion" style="background:#EF9F27"></div>
+    </button>
+    <button class="phase-btn" onclick="showPhase(3)">
+      <div class="picon"><i class="ti ti-building-hospital"></i></div>
+      <span class="pname">Визит</span>
+      <span class="psub">В клинике</span>
+      <div class="emotion" style="background:#1D9E75"></div>
+    </button>
+    <button class="phase-btn" onclick="showPhase(4)">
+      <div class="picon"><i class="ti ti-file-text"></i></div>
+      <span class="pname">После визита</span>
+      <span class="psub">Анализы / назначения</span>
+      <div class="emotion" style="background:#E24B4A"></div>
+    </button>
+    <button class="phase-btn" onclick="showPhase(5)">
+      <div class="picon"><i class="ti ti-repeat"></i></div>
+      <span class="pname">Удержание</span>
+      <span class="psub">Повторный контакт</span>
+      <div class="emotion" style="background:#1D9E75"></div>
+    </button>
+  </div>
+
+  <!-- Phase 0 -->
+  <div id="p0" class="detail-panel active">
+    <div class="detail-grid">
+      <div class="detail-card actions">
+        <h3><i class="ti ti-user"></i> Действия пациента</h3>
+        <ul>
+          <li>Ищет врача или клинику в Google / Яндекс</li>
+          <li>Читает отзывы на 2ГИС и ПроДокторов</li>
+          <li>Заходит на сайт fomin-clinic.ru</li>
+          <li>Изучает список услуг и врачей</li>
+          <li>Сравнивает с конкурентами по цене и удобству</li>
+        </ul>
+      </div>
+      <div class="detail-card pains">
+        <h3><i class="ti ti-mood-sad"></i> Боли и барьеры</h3>
+        <ul>
+          <li>Сложно понять разницу между врачами одной специальности</li>
+          <li>Нет фильтра «по симптому» — нужно знать специальность заранее</li>
+          <li>Цена приёма скрыта до записи</li>
+          <li>Много филиалов — непонятно, в какой обращаться</li>
+        </ul>
+      </div>
+      <div class="detail-card opps">
+        <h3><i class="ti ti-bulb"></i> Возможности</h3>
+        <ul>
+          <li>Симптом-навигатор → автоматический подбор специалиста</li>
+          <li>Сравнение врачей: рейтинг, опыт, ближайший слот</li>
+          <li>Показ цены первого приёма до регистрации</li>
+          <li>Геолокация → ближайший удобный филиал</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 1 -->
+  <div id="p1" class="detail-panel">
+    <div class="detail-grid">
+      <div class="detail-card actions">
+        <h3><i class="ti ti-user"></i> Действия пациента</h3>
+        <ul>
+          <li>Нажимает «Записаться» на сайте или в приложении</li>
+          <li>Проходит регистрацию: телефон + дата рождения</li>
+          <li>Выбирает специальность → врача → дату и время</li>
+          <li>Получает подтверждение по SMS</li>
+        </ul>
+      </div>
+      <div class="detail-card pains">
+        <h3><i class="ti ti-mood-sad"></i> Боли и барьеры</h3>
+        <ul>
+          <li>Приложение вылетает при выборе врача на Android / Huawei</li>
+          <li>Невозможно перезаписаться или отменить запись внутри приложения</li>
+          <li>Нет подтверждения на email — только автозвонок за 2 часа</li>
+          <li>UX сайта и приложения не согласованы между собой</li>
+          <li>Отсутствует выбор формата «онлайн vs очно» на первом шаге</li>
+        </ul>
+      </div>
+      <div class="detail-card opps">
+        <h3><i class="ti ti-bulb"></i> Возможности</h3>
+        <ul>
+          <li>Унификация UX: одинаковый flow на сайте и в приложении</li>
+          <li>Кнопка «Перенести запись» в один клик</li>
+          <li>Push + email подтверждение сразу после записи</li>
+          <li>Онбординг для новых пациентов (что взять, как добраться)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div id="p2" class="detail-panel">
+    <div class="detail-grid">
+      <div class="detail-card actions">
+        <h3><i class="ti ti-user"></i> Действия пациента</h3>
+        <ul>
+          <li>Получает напоминание об записи</li>
+          <li>Заполняет анкету нового пациента</li>
+          <li>Ищет адрес и маршрут до клиники</li>
+          <li>Уточняет, что взять с собой на приём</li>
+        </ul>
+      </div>
+      <div class="detail-card pains">
+        <h3><i class="ti ti-mood-sad"></i> Боли и барьеры</h3>
+        <ul>
+          <li>Анкета нового пациента — отдельная страница вне приложения</li>
+          <li>Нет чеклиста «что взять на приём» под конкретную услугу</li>
+          <li>Единственное напоминание — автозвонок за 2 часа до</li>
+          <li>Маршрут спрятан — нужно несколько переходов с главной</li>
+        </ul>
+      </div>
+      <div class="detail-card opps">
+        <h3><i class="ti ti-bulb"></i> Возможности</h3>
+        <ul>
+          <li>Анкета пациента встроена в flow записи в приложении</li>
+          <li>Push-напоминание за 24 часа + персональный чеклист подготовки</li>
+          <li>Встроенная карта и маршрут прямо в карточке записи</li>
+          <li>Кнопка «Опоздаю» — уведомление администратора в 1 тап</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div id="p3" class="detail-panel">
+    <div class="detail-grid">
+      <div class="detail-card actions">
+        <h3><i class="ti ti-user"></i> Действия пациента</h3>
+        <ul>
+          <li>Регистрируется на стойке ресепшн</li>
+          <li>Ожидает в зоне ожидания</li>
+          <li>Проходит приём у врача</li>
+          <li>Получает назначения и направления</li>
+          <li>Оплачивает услуги на ресепшн</li>
+        </ul>
+      </div>
+      <div class="detail-card pains">
+        <h3><i class="ti ti-mood-sad"></i> Боли и барьеры</h3>
+        <ul>
+          <li>Назначения выдаются на бумаге — не появляются в приложении сразу</li>
+          <li>Нет информации об актуальном времени ожидания</li>
+          <li>Очередь на ресепшн при оплате после приёма</li>
+        </ul>
+      </div>
+      <div class="detail-card opps">
+        <h3><i class="ti ti-bulb"></i> Возможности</h3>
+        <ul>
+          <li>Назначения появляются в приложении автоматически после приёма</li>
+          <li>Онлайн-оплата через приложение — без очереди</li>
+          <li>Живая очередь / ожидаемое время ожидания в приложении</li>
+          <li>Digital check-in: регистрация через приложение без стойки</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 4 -->
+  <div id="p4" class="detail-panel">
+    <div class="detail-grid">
+      <div class="detail-card actions">
+        <h3><i class="ti ti-user"></i> Действия пациента</h3>
+        <ul>
+          <li>Ждёт готовности результатов анализов</li>
+          <li>Открывает приложение для просмотра результатов</li>
+          <li>Пытается скачать или переслать документы</li>
+          <li>Задаёт вопросы врачу через чат</li>
+          <li>Записывается на повторный приём</li>
+        </ul>
+      </div>
+      <div class="detail-card pains">
+        <h3><i class="ti ti-mood-sad"></i> Боли и барьеры</h3>
+        <ul>
+          <li>Результаты не открываются, нельзя скачать файлы в своём формате</li>
+          <li>Приложение принимает только ограниченные форматы документов</li>
+          <li>Чат с врачом нестабилен, техподдержка долго не отвечает</li>
+          <li>Нет расшифровки показателей в понятном для пациента формате</li>
+        </ul>
+      </div>
+      <div class="detail-card opps">
+        <h3><i class="ti ti-bulb"></i> Возможности</h3>
+        <ul>
+          <li>AI-расшифровка каждого показателя прямо рядом с результатом</li>
+          <li>Скачивание в PDF, JPEG, отправка в мессенджер одним тапом</li>
+          <li>Push-уведомление при готовности анализов</li>
+          <li>Консьерж-бот (уже есть) расширить: «что значит этот результат»</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 5 -->
+  <div id="p5" class="detail-panel">
+    <div class="detail-grid">
+      <div class="detail-card actions">
+        <h3><i class="ti ti-user"></i> Действия пациента</h3>
+        <ul>
+          <li>Получает напоминание о повторном приёме или профилактике</li>
+          <li>Использует реферальную программу</li>
+          <li>Оставляет отзыв о враче</li>
+          <li>Использует карту лояльности</li>
+          <li>Возвращается при следующей необходимости</li>
+        </ul>
+      </div>
+      <div class="detail-card pains">
+        <h3><i class="ti ti-mood-sad"></i> Боли и барьеры</h3>
+        <ul>
+          <li>Реферальная программа сложно обнаруживается в интерфейсе</li>
+          <li>Нет проактивных напоминаний о профилактике и чекапах</li>
+          <li>Дневник здоровья не связан с реальными назначениями врача</li>
+        </ul>
+      </div>
+      <div class="detail-card opps">
+        <h3><i class="ti ti-bulb"></i> Возможности</h3>
+        <ul>
+          <li>Персональные напоминания: «Пора на ежегодный чекап»</li>
+          <li>Реферальная ссылка — кнопка на главном экране приложения</li>
+          <li>Дневник здоровья + автотрекинг динамики анализов во времени</li>
+          <li>Программа лояльности с видимым прогрессом и ближайшей наградой</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Emotion chart -->
+  <div class="section-header">
+    <i class="ti ti-chart-line"></i>
+    <h2>Эмоциональная кривая пациента</h2>
+  </div>
+  <div class="chart-card">
+    <canvas id="emoChart" height="90"></canvas>
+    <div class="chart-labels">
+      <span>Осознание</span>
+      <span>Запись</span>
+      <span>До визита</span>
+      <span>Визит</span>
+      <span>После визита</span>
+      <span>Удержание</span>
+    </div>
+  </div>
+
+  <!-- Problems -->
+  <div class="section-header">
+    <i class="ti ti-alert-circle"></i>
+    <h2>Ключевые проблемы и предложения</h2>
+  </div>
+  <div class="problems-grid">
+    <div class="prob-card">
+      <span class="severity sev-high">Критично</span>
+      <h4>Приложение вылетает при записи</h4>
+      <p>Пользователи RuStore сообщают: при выборе врача приложение крашится на Android, особенно на устройствах Huawei. Прямая потеря конверсии в запись.</p>
+      <div class="fix"><strong>Предложение:</strong> Приоритетное покрытие e2e-тестами воронки записи на топ-5 устройствах. Веб-версия записи как fallback для проблемных устройств.</div>
+    </div>
+    <div class="prob-card">
+      <span class="severity sev-high">Критично</span>
+      <h4>Нельзя скачать результаты анализов</h4>
+      <p>Ограниченные форматы и невозможность скачать фото — частая жалоба. Пациент вынужден звонить или приезжать за бумажной версией.</p>
+      <div class="fix"><strong>Предложение:</strong> Поддержка PDF + JPEG при скачивании. Кнопка «Поделиться» — отправка напрямую в мессенджер или на email.</div>
+    </div>
+    <div class="prob-card">
+      <span class="severity sev-med">Важно</span>
+      <h4>Анкета нового пациента вне приложения</h4>
+      <p>Пациент заполняет анкету отдельно на сайте — разрыв в пути пользователя. Увеличивает нагрузку на стойку регистрации.</p>
+      <div class="fix"><strong>Предложение:</strong> Встроить анкету в flow записи в приложении — сразу после выбора врача, до подтверждения слота.</div>
+    </div>
+    <div class="prob-card">
+      <span class="severity sev-med">Важно</span>
+      <h4>Нет AI-расшифровки анализов</h4>
+      <p>Пациент получает числа без контекста — это источник тревоги и повод обращаться в поддержку или искать ответы самостоятельно.</p>
+      <div class="fix"><strong>Предложение:</strong> ИИ-подсказка рядом с каждым показателем: норма / отклонение / что делать. Консьерж-бот уже есть — расширить его сценарии.</div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="section-header">
+    <i class="ti ti-target"></i>
+    <h2>Метрики для оценки улучшений</h2>
+  </div>
+  <div class="metrics-grid">
+    <div class="metric">
+      <div class="num">CR</div>
+      <div class="lbl">Сайт → запись</div>
+      <div class="delta">↑ цель: +20%</div>
+    </div>
+    <div class="metric">
+      <div class="num">Crash rate</div>
+      <div class="lbl">Приложение</div>
+      <div class="delta">↓ цель: &lt;0.5%</div>
+    </div>
+    <div class="metric">
+      <div class="num">NPS</div>
+      <div class="lbl">После визита</div>
+      <div class="delta">↑ цель: +15 п.</div>
+    </div>
+    <div class="metric">
+      <div class="num">DAU</div>
+      <div class="lbl">Активность вне записи</div>
+      <div class="delta">↑ вовлечённость</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Подготовлено <strong>Никитой Свириным</strong> · на основе открытых данных: fomin-clinic.ru, RuStore, 2ГИС, ПроДокторов<br>
+    <a href="https://fomin-clinic.ru" target="_blank">fomin-clinic.ru</a>
+  </div>
+</div>
+
+<script>
+function showPhase(idx) {
+  document.querySelectorAll('.phase-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  for(let i=0;i<6;i++){
+    const el = document.getElementById('p'+i);
+    el.classList.toggle('active', i===idx);
+  }
+}
+
+const ctx = document.getElementById('emoChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['Осознание','Запись','До визита','Визит','После','Удержание'],
+    datasets: [{
+      data: [50, 22, 38, 82, 18, 72],
+      borderColor: '#1D9E75',
+      backgroundColor: 'rgba(29,158,117,0.07)',
+      borderWidth: 2.5,
+      pointBackgroundColor: ['#EF9F27','#E24B4A','#EF9F27','#1D9E75','#E24B4A','#1D9E75'],
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      pointRadius: 7,
+      fill: true,
+      tension: 0.42
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: {
+      callbacks: {
+        label: ctx => {
+          const labels = ['Нейтрально','Напряжение','Тревога','Позитив','Фрустрация','Лояльность'];
+          return ' ' + labels[ctx.dataIndex];
+        }
+      }
+    }},
+    scales: {
+      y: { min:0, max:100, ticks:{display:false}, grid:{color:'rgba(0,0,0,0.05)'}, border:{display:false} },
+      x: { display:false }
+    }
+  }
+});
+</script>
+</body>
+</html>
